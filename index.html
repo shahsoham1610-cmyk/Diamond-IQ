@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diamond IQ</title>
+<style>
+:root{--bg:#eef2ea;--ink:#14281c;--card:#fff;--grass:#2f6b3f;--dirt:#c58b5a;--red:#b3202a;--gold:#f2b705;--line:#c9d3c4;--ok:#1d7a3a;--lock:#b9c2b4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1c14;--ink:#e8efe4;--card:#16291d;--grass:#1f4f2d;--dirt:#a97449;--red:#e0535c;--line:#2c4635;--ok:#5bd17d;--lock:#35503e;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1c14;--ink:#e8efe4;--card:#16291d;--grass:#1f4f2d;--dirt:#a97449;--red:#e0535c;--line:#2c4635;--ok:#5bd17d;--lock:#35503e;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 "Source Sans 3",system-ui,sans-serif}
+main{max-width:560px;margin:0 auto;padding:18px 16px 56px}
+.logo{font:400 44px/1 "Alfa Slab One",Georgia,serif;margin:6px 0 2px}
+.logo i{font-style:normal;color:var(--red)}
+.tag{margin:0 0 16px;opacity:.8}
+.hero{background:var(--grass);color:#fff;border-radius:14px;padding:16px}
+.hero .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.lvl{font:400 22px "Alfa Slab One",Georgia,serif}
+.bar{height:12px;border-radius:6px;background:rgba(255,255,255,.25);overflow:hidden;margin:10px 0 4px}
+.bar b{display:block;height:100%;background:var(--gold);border-radius:6px;transition:width .5s}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:14px 20px;background:var(--red);color:#fff;font:700 18px inherit;cursor:pointer;margin-top:14px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.btn.alt{background:var(--card);color:var(--ink);border:2px solid var(--line)}
+h2{font:400 22px "Alfa Slab One",Georgia,serif;margin:26px 0 8px}
+.path{display:flex;flex-direction:column;gap:18px;padding:8px 0}
+.node{display:flex;align-items:center;gap:14px;border:0;background:none;color:var(--ink);text-align:left;font:inherit;cursor:pointer;padding:0}
+.node:nth-child(even){flex-direction:row-reverse;text-align:right}
+.disc{flex:none;width:78px;height:78px;border-radius:50%;display:grid;place-items:center;font-size:34px;background:var(--grass);box-shadow:0 6px 0 rgba(0,0,0,.3);position:relative}
+.node.done .disc{background:var(--gold)}
+.node.locked .disc{background:var(--lock);box-shadow:0 6px 0 rgba(0,0,0,.15)}
+.node.locked{cursor:not-allowed;opacity:.7}
+.node strong{display:block;font-size:19px}
+.node:focus-visible,.btn:focus-visible,.opt:focus-visible,.x:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.x{border:0;background:none;color:var(--ink);font-size:26px;cursor:pointer}
+.top .bar{flex:1;background:var(--line);margin:0}
+.top .bar b{background:var(--ok)}
+.hearts{font-weight:700;color:var(--red);font-size:20px}
+.field{width:100%;height:auto;display:block;margin:8px 0 12px;border-radius:12px;background:var(--grass)}
+.outs{display:flex;gap:6px;align-items:center;font-weight:700;margin-bottom:4px}
+.lamp{width:14px;height:14px;border-radius:50%;border:2px solid var(--ink);opacity:.6}
+.lamp.on{background:var(--red);border-color:var(--red);opacity:1}
+.q{font-size:20px;font-weight:600;margin:6px 0 12px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;border:2px solid var(--line);background:var(--card);color:var(--ink);padding:12px 14px;border-radius:12px;font:600 17px/1.35 inherit;cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 16%,var(--card))}
+.opt.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 13%,var(--card))}
+.why{margin-top:14px;padding:12px 14px;border-left:6px solid var(--dirt);background:var(--card);border-radius:0 12px 12px 0}
+.end{text-align:center;padding:24px 0}
+.big{font:400 52px "Alfa Slab One",Georgia,serif}
+.conf{position:fixed;top:-30px;font-size:24px;animation:fall 2.5s linear forwards;pointer-events:none}@keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}@media (prefers-reduced-motion:reduce){.conf{display:none}}
+.pop{display:inline-block;background:var(--gold);color:#14281c;font-weight:700;padding:6px 14px;border-radius:999px;margin:6px 0}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+// Each situation: [position, outs, runners(1st,2nd,3rd), question, CORRECT, wrong, wrong, wrong, explanation]
+var U=[
+["Infield Basics","🧤",[
+["SS",1,"100","A hard grounder is hit right at you. What’s the play?","Throw to second to start the double play","Throw to first","Hold the ball","Throw home","Runner on first, fewer than two outs: go for two. Get the lead runner at second, then first."],
+["2B",1,"100","The ball is hit to the shortstop. Where do you go?","Cover second base and give a target","Cover first base","Back up the outfield","Stay put","On a double play the second baseman covers second so the shortstop has a place to throw."],
+["3B",2,"111","Bases loaded, two outs, grounder to you. What’s the easiest out?","Step on third base","Throw to first","Throw home","Tag the runner","Every runner is forced, so stepping on third is the shortest play and ends the inning."],
+["1B",0,"000","The second baseman fields a grounder. What’s your job?","Get to the bag and show a target","Run toward the ball","Cover second","Back up home","Get to first, face the throw, and give your fielder a big target with your glove."],
+["3B",0,"100","A bunt rolls slowly toward you and the runner is almost at second. What now?","Take the sure out at first","Throw to second","Hold the ball","Throw home","When you can’t get the lead runner, take the sure out so the runner only advances one base."],
+["2B",0,"000","A pop-up drops between you and the first baseman. Who takes it?","Whoever has the best angle, and they call it loud","Whoever is closer to the dugout","Nobody calls it","The pitcher","Communication wins. Call “I got it” early and loudly so there are no collisions."],
+["1B",0,"100","You’re holding the runner on first. When do you leave the bag?","After the pitcher releases the ball","Before the pitcher moves","Right when he looks home","Never","Hold the runner with your foot on the bag, then move to your fielding spot once the ball is released."],
+["SS",1,"000","A slow roller is hit between you and third. How do you field it?","Charge it, field it on the run, and throw","Wait for it to stop","Let the catcher get it","Pick it up standing still","Slow rollers beat you if you wait. Attack the ball and use one smooth motion."],
+["2B",2,"000","Two outs, grounder to you with no one on. What’s the priority?","A clean, accurate throw to first","A rushed hard throw","Hold the ball","Throw home","Accuracy beats speed. One good throw ends the inning."],
+["3B",1,"100","A line drive is hit right at you with a runner on first. What now?","Catch it, then check the runner and throw to first if he’s off","Throw home","Drop it","Ignore the runner","After a caught liner the runner may be off the bag. Doubling him up is a bonus out."],
+["1B",0,"000","The throw from short is in the dirt. How do you handle it?","Scoop it with your foot on the bag, or block it with your body","Step off and wait","Let it go by","Close your eyes","Stretch and scoop if you can. If not, block it so it stays in front of you."],
+["SS",1,"110","Runners on first and second, grounder to you. What’s the best play?","Take the closest force, then throw to first if possible","Tag a runner","Throw home","Hold it","Both runners are forced. Take the closest force first, then try for two."],
+["SS",0,"000","A grounder is hit to your backhand side. What’s your best option?","Field it on the backhand, plant your feet, and make a strong throw","Let it go","Dive away","Throw without looking","Use your feet to set and turn your body so the throw is accurate."],
+["2B",1,"100","You turn a double play and the runner slides hard at you. What do you do?","Catch, touch the bag, throw to first, and move off the line","Wait for the slide","Hold the ball","Freeze","Quick feet and a fast release keep you safe and get the second out."],
+["3B",0,"000","A bunt rolls down the line. What do you do?","Charge it and make a quick throw to first","Let it roll","Stand still","Throw it away","Charging gives you the best chance to get the runner. Stay balanced."],
+["1B",1,"000","A throw pulls you off the bag toward the runner. What do you do?","Catch it and sweep a tag on the runner","Let it go","Step back","Throw it back","If you can’t reach the bag, tag the runner instead. Catch it first."],
+["2B",0,"000","A grounder is hit up the middle just past the mound. What do you do?","Get to it, field it in front, and throw to first","Let the shortstop have it","Stop","Duck","Play through the ball and use your momentum toward first."],
+["1B",0,"000","A ground ball is hit to you and the pitcher is covering first. What do you do?","Field it and flip a soft toss to the pitcher on the bag","Throw it as hard as you can","Hold the ball","Run to the bag yourself","A soft, accurate toss leads the pitcher to the bag so he can step on it."]
+]],
+["Outfield",  "🧢",[
+["CF",0,"100","A line drive splits the gap and you run it down. Where does the throw go?","To the cutoff man","Straight to third","Straight home","Into the dugout","A strong, accurate throw to the cutoff man is faster and more accurate than one long heave."],
+["LF",0,"001","A fly ball is hit to you with a runner on third. How do you set up?","Get behind it and catch it moving toward home","Catch it flat-footed","Catch it with your back to home","Let the shortstop take it","Momentum toward home makes your throw strong and quick."],
+["RF",1,"010","Single to right, runner on second heading for the plate. How do you throw?","Low and hard on a line through the cutoff man","A high arcing lob","Slowly to first","Bounce it to second","A low throw can be cut off by the cutoff man or let go through to home."],
+["LF",0,"000","A fly ball is hit over your head. What’s your first move?","Turn, drop-step, and sprint to the landing spot","Backpedal","Wait and see","Jump immediately","Backpedaling is slow. Turn your hips and run to where the ball will land."],
+["CF",0,"000","A fly ball falls between you and the right fielder. Who calls it?","The center fielder has priority and calls it","The right fielder always","Nobody","The second baseman","Center field has priority over the corner outfielders because you see the whole field."],
+["RF",0,"000","A single bounces through to you with no one on. What’s the play?","Charge it, field it, and hit second base to hold him at first","Wait for it to stop","Throw home","Walk it in","Charging with momentum keeps the batter from stretching a single into a double."],
+["LF",2,"000","You’re chasing a deep fly and feel the warning track. What does it tell you?","The wall is close, so get a hand up","Stop running","Close your eyes","Slow down and watch it","The track’s different texture is your signal that the wall is close. Protect yourself."],
+["LF",0,"100","A single is hit to you. What do you do before you throw?","Check where the runners are and pick your target","Throw right away","Walk to the ball","Wave to the crowd","Know your base before the ball arrives so you don’t waste time."],
+["CF",1,"000","A sharp grounder comes right at you. How do you field it?","Get in front, use two hands, and keep it from going past","Stab with one hand","Let it bounce over","Step aside","Block it with your body. A ball past you is extra bases."],
+["RF",2,"001","Two outs, runner on third, fly ball to shallow right. What do you do?","Catch it for the out. The inning ends","Throw home","Let it drop","Check the runner first","With two outs a catch ends the inning, so the runner doesn’t matter."],
+["LF",0,"000","The sun is in your eyes on a fly ball. What do you do?","Shade your eyes with your glove and keep your feet moving","Close your eyes","Turn away","Stand still","Use your glove as a visor and stay mobile so you can adjust."],
+["RF",0,"000","A fly ball is hit into the corner near the foul line. What’s your job?","Run it down, know where the wall is, and throw to the cutoff","Stop at the line","Let it go","Wait","Corner balls bounce in awkward ways. Get there fast and hit the cutoff."],
+["CF",0,"000","What should you do before every pitch?","Know the outs and runners and where to throw","Look at the sky","Sit down","Check your phone","Outfielders think ahead too. Know the play before the ball is hit."],
+["CF",0,"000","The left fielder is chasing a ball and calls it. What do you do?","Back him up in case he misses","Run away","Take it anyway","Stand still","Outfielders back each other up. If he misses, you stop the ball."],
+["RF",1,"100","A fly ball to right is caught with a runner on first tagging up. What do you do?","Throw to second if he goes, or hold the ball if he stays","Throw to first","Throw home","Drop it","After the catch, find the runner and make the throw only if he goes."],
+["LF",0,"000","A hard ground ball takes a bad hop toward you. What do you do?","Stay behind it and keep your body in front","Reach with one hand","Run away","Dive sideways","Staying behind the ball gives you a second chance if it gets past the glove."]
+]],
+["Pitcher &amp; Catcher","⚾",[
+["P",0,"000","The first baseman fields a grounder away from the bag. Your job?","Cover first base and take the toss","Back up home","Cover second","Stand on the mound","Pitchers cover first on balls hit to the first baseman."],
+["C",1,"001","A pitch bounces in the dirt with a runner on third. What do you do?","Drop to your knees and block it in front of you","Backhand it","Jump up","Let it go","Keep the ball in front of you so the runner can’t score."],
+["P",1,"100","A comebacker is hit right to you with a runner on first. What now?","Look at second and start the double play","Throw to first","Throw home","Drop it","Fielding it cleanly gives you the chance for two. Turn and throw to the covering fielder."],
+["P",0,"001","A wild pitch gets away from the catcher with a runner on third. Your job?","Sprint to cover home plate","Stay on the mound","Cover first","Chase the ball","The pitcher covers home on a passed ball or wild pitch with a runner on third."],
+["C",0,"100","The runner steals second. What matters most on your throw?","A quick transfer and accurate throw to the bag","A big windup","Waiting for the batter","Throwing to first","Quickness matters as much as arm strength. Catch, transfer, and throw."],
+["P",1,"010","A runner on second keeps taking big leads. How do you control him?","Check him with a look and vary your timing","Ignore him","Throw to third every pitch","Turn your back","Looks and changed timing keep runners honest and hurt their jump."],
+["C",0,"000","A foul pop-up goes up behind the plate. What do you do with the mask?","Rip it off and throw it away from the ball","Keep it on","Toss it toward the ball","Hold it","Find the ball first, then throw the mask the other way so you don’t trip over it."],
+["P",0,"000","You’re behind 3 balls and 0 strikes. What’s a good plan?","Stay calm, throw a strike, and trust your defense","Throw as hard as you can","Walk him on purpose","Quit","Strikes get you back in the count. Your defense is behind you."],
+["C",0,"100","A bunt rolls near the plate. What do you do?","Pounce on it, check the runner, and throw to the right base","Wait for the pitcher","Run to first","Ignore it","The catcher fields bunts near home and directs the play. Yell the base."],
+["P",0,"000","A comebacker is hit hard at you with nobody on. What’s the play?","Field it cleanly and throw to first","Duck","Throw home","Wait for help","You’re the fifth infielder. Make the routine play."],
+["C",0,"001","A pitch gets away and the runner on third breaks for home. What do you do?","Retrieve it quickly and flip to the pitcher covering home","Throw to first","Let it go","Stand at the plate","The pitcher covers home. A quick, safe flip gets the tag."],
+["P",0,"000","The batter hits a high pop-up near the mound. Who takes it?","The catcher or infielder with the best angle, called out loud","The pitcher always","Nobody","The outfielder","Pitchers usually stay out of the way and let infielders take pop-ups. Call it and avoid collisions."],
+["C",2,"000","Strike three gets away from you with two outs and first base open. What do you do?","Get the ball and throw to first","Run to the dugout","Throw to second","Hold it","On a dropped third strike the batter can run to first. Throw him out."],
+["P",1,"100","The runner on first breaks for second. What should you do?","Deliver quickly and give your catcher a chance","Throw to first","Stop and sit","Cover home","A quick delivery helps your catcher beat the runner to the bag."],
+["C",1,"000","The pitcher is struggling to find the zone. What can you do?","Set a good target and give calm, simple signals","Yell at him","Stand up","Walk away","Catchers lead the battery. A steady target and calm attitude help."],
+["P",0,"000","You’re warming up before the inning. What’s your goal?","Loosen up, find your mechanics, and throw strikes","Throw as hard as you can","Rest","Practice batting","Warm-up pitches set your rhythm and command."],
+["C",0,"010","A runner on second takes a big lead. What can you do?","Be ready to throw to second if he leads too far","Ignore him","Wave","Call time every pitch","Catchers can see the whole field. Showing you can throw keeps runners honest."]
+]],
+["Team Plays","🤝",[
+["SS",1,"000","A pop-up falls between you and the left fielder, who’s running in. Who takes it?","The outfielder, if they call it","You, always","Nobody calls it","The third baseman","Outfielders have priority over infielders because they run in and have the easier play."],
+["3B",0,"110","Runners on first and second, bunt rolls toward you. What’s the best play?","Take the force at third if you have time","Throw to first","Throw home","Hold it","The lead runner is forced, so getting him at third kills the rally."],
+["1B",2,"010","Two outs, runner on second, grounder to you and no one covers first. Best play?","Step on the bag yourself","Throw to the pitcher","Tag the runner on second","Throw home","With two outs, get the out any way you can. Unassisted at first ends the inning."],
+["RF",0,"000","A grounder is hit to short with no one on. Where do you go?","Back up first base","Stay in right","Charge the mound","Back up second","Outfielders back up throws. If the throw gets away, you stop the extra base."],
+["SS",0,"000","What should you do before every single pitch?","Check outs and runners and decide where the ball goes","Look at the crowd","Wave at your friends","Check your shoes","Great players know the play before the ball is hit."],
+["3B",1,"001","Infield in, runner on third, grounder to you. He breaks for home. Now?","Throw home","Throw to first","Hold the ball","Throw to second","With the infield in, the run is the priority. Look the runner back first."],
+["SS",2,"001","Two outs, runner on third, grounder to you. Where does it go?","First base for the sure out","Home","Second","Third","With two outs the inning ends on the first out. Take the easy one."],
+["3B",0,"000","A foul ball is hit near the fence on the third base side. What do you do?","Track it, watch the fence, and catch it if you can","Stop","Let it fall","Ignore it","Caught foul balls are outs. Know where the fence is so you stay safe."],
+["CF",0,"110","Runners on first and second, base hit to center. Where do you throw?","To third or the cutoff man, low and hard","Home","First","Nowhere","Hold the runners to one base with a smart, low throw."],
+["SS",1,"110","Runners on first and second, high pop-up in the infield. The umpire calls “infield fly.” What does that mean?","The batter is out even if you drop it","The runners must advance","It’s a foul ball","The inning ends","The infield fly rule protects runners from a cheap double play. The batter is out right away."],
+["SS",1,"010","A runner is caught in a rundown. What’s your goal?","Make as few throws as possible and run him back to the base he left","Throw every time","Chase him alone","Walk away","Run hard at him, throw sharply, and get the tag with one or two throws."],
+["P",1,"010","A ground ball is hit to the right side with a runner on second. What does the pitcher do?","Cover first or back up the play","Stay on the mound","Go to third","Hide","Pitchers never stand still. Back up or cover so a bad throw doesn’t cost extra bases."],
+["1B",1,"000","A foul pop-up goes up near the dugout. What should you watch for?","The dugout steps and rail","The crowd","Your bat","Nothing","Know where the dugout is so you can catch it and stay safe."],
+["SS",0,"010","A ball is hit down the left field line and the runner on second is scoring. Where do you line up?","Between the outfielder and home, in line for the relay","Behind third","Next to the pitcher","In the dugout","The cutoff or relay man lines up with the base the ball is going to."],
+["3B",1,"010","The runner on second is leaning too far toward third. What can you do?","Work a pickoff play if the team has a signal","Wave","Do nothing","Tell the crowd","Pickoffs work when the pitcher, infielders and catcher agree on the signal."],
+["1B",0,"000","The batter hits a grounder to the right side. What do you do?","Get to the bag fast and show a target","Wait for the throw","Walk","Stay put","Beat the batter to the bag so your fielder has a target."],
+["P",2,"111","Bases loaded, two outs, full count. What matters most?","Throw a strike and trust your defense","Throw as hard as you can","Throw it in the dirt","Walk him on purpose","A walk forces in a run, so command matters more than velocity."],
+["RF",2,"110","Two outs, runners on first and second, hit to right. The runner at second tries to score. What do you do?","Throw home on a line through the cutoff man","Throw to first","Lob to second","Hold it","The run matters most. Hit the cutoff and let him decide."],
+["SS",0,"000","The sun is in your face on a pop-up. What should you do?","Shade your eyes with your glove and call for help","Close your eyes","Ignore it","Run away","Use your glove as a visor and communicate. Teammates can help."],
+["3B",1,"010","Runner on second, grounder hit to you. What do you do?","Check the runner, then make the sure out at first","Throw home","Throw to second","Hold the ball","Control the runner first, then take the out you can get."],
+["P",0,"110","Runners on first and second, a bunt is hit to you. What do you do?","Check the lead runner and throw to third if you can, otherwise first","Throw home","Hold it","Run to second","The lead runner is forced to third. Take the force if you have time, otherwise get the sure out."]
+]],
+["Baserunning","🏃",[
+["BR",1,"100","A grounder is hit to the shortstop and you’re the runner on first. What do you do?","Run hard and slide legally into second","Stop halfway","Wait for the throw","Walk back to first","Hard, legal running forces a rushed throw and can save the batter from a double play."],
+["BR",1,"010","A deep fly ball is hit to center and you’re on second. What’s the plan?","Tag up and go when the ball is caught","Run to third right away","Stay put","Run home","Stay on the bag until it’s caught, then go if you can make it. Leaving early means you can be doubled off."],
+["BR",2,"010","Two outs, ball hit into the gap, you’re on second. What do you do?","Run on contact","Tag up","Wait for the catch","Stay at second","With two outs the inning ends on a catch, so running early costs nothing."],
+["BR",0,"101","The third base coach throws up a stop sign on a base hit. What do you do?","Stop at third and listen to your coach","Run home anyway","Slide into the dugout","Turn back to second","The coach sees the whole play. Trust the sign."],
+["BR",0,"000","You hit a grounder to short. How do you run through first?","Sprint through the bag and turn right into foul ground","Slow down before the bag","Slide into first","Stop on the bag","Running through the bag is faster. Turn right into foul territory so you won’t be tagged."],
+["BR",1,"100","The pitcher throws over to first. What do you do?","Get back to the bag fast with your eyes on the ball","Ignore it","Walk back slowly","Run to second","Always get back safely. Stay low and keep the pitcher in view."],
+["BR",0,"100","You’re stealing second. How do you slide?","Feet first, hands up, and stay low","Dive headfirst without looking","Run past the bag","Stop short","Feet first with hands up protects you and helps you stop on the bag."],
+["BR",1,"010","A line drive is hit and you can’t tell if it will be caught. What do you do?","Freeze, then move back or ahead depending on what you see","Run to third","Run home","Stand there","On liners, read the ball. Don’t get doubled off."],
+["BR",1,"001","You’re on third and the pitcher is about to deliver. Where do you lead off?","In foul territory so a batted ball can’t hit you","In fair territory","On the bag","Halfway home","A runner hit by a batted ball in fair ground is out. Lead off in foul ground."],
+["BR",0,"010","A grounder is hit to the shortstop and you’re on second with no outs. What do you do?","Hold at second unless it goes through","Run to third","Run home","Go back to first","The ball is in front of you, so staying put avoids getting thrown out."],
+["BR",0,"100","The pitcher is slow to the plate. What does a good runner do?","Get a good jump and steal if your coach gives the sign","Run before the pitch","Stay on the bag","Ask the umpire","A slow delivery helps, but steal only on the coach’s signal."],
+["BR",1,"100","You’re on first and the ball is hit to the outfield. How do you run?","Round the base with your eyes on the ball and your coach","Run past second","Stop","Look at the ground","Read the ball and the third base coach while you run."],
+["BR",0,"000","You hit a ball into the gap. How do you run?","Hard out of the box, looking for a double","Walk","Stop at first","Jog","Always run hard. A double starts with the first step."],
+["BR",1,"110","You’re on second and a teammate is on first. The ball is hit to center. What do you do?","Run hard and read the third base coach","Stop at second","Stay on","Run home immediately","Read the play together. Your coach sees the whole field."]
+]],
+["Hitting &amp; Strategy","🏏",[
+["B",2,"000","You have two strikes. What’s your approach?","Shorten up and protect the plate","Swing as hard as you can","Take every pitch","Bunt every time","With two strikes, put the ball in play. A shorter swing helps you hit pitches near the zone."],
+["B",0,"010","Runner on second and no outs. What’s a great team at-bat?","Hit the ball to the right side to move him to third","Strike out looking","Pop it up","Bunt it hard to the pitcher","Moving the runner to third puts him in scoring range even on an out."],
+["B",1,"001","Runner on third, less than two outs. What gets him home without a hit?","A deep fly ball to the outfield","A pop-up","A strikeout","A slow roller to the catcher","A sacrifice fly lets the runner tag up and score."],
+["B",0,"100","The coach gives the bunt sign with a runner on first. What’s your job?","Put the ball down to move him to second","Swing away","Take the pitch","Hit it over the fence","A sacrifice bunt trades an out for a base. Show it early and square up."],
+["B",0,"000","A pitch is high and outside the strike zone. What do you do?","Take it. It’s a ball","Swing at it","Back up","Bunt it","Good hitters swing at strikes. Laying off balls gets you walks and better counts."],
+["B",1,"100","The hit-and-run is on. What’s your job?","Swing and make contact, ideally on the ground","Take the pitch","Pop it up","Bunt","The runner is going, so contact is the priority. A grounder to the right side is ideal."],
+["B",1,"000","The pitcher throws a changeup and you’re early. What should you do?","Stay back and keep your weight from jumping","Swing early","Dive forward","Close your eyes","Staying back lets you adjust to slower pitches."],
+["B",0,"000","You step in the box. What’s the first thing you check?","The coach for signs","Your shoes","The crowd","Nothing","Always check for signs before every pitch."],
+["B",2,"110","Two outs, runners on first and second, tie game late. What’s the best approach?","Work the count and hit a ball you can drive","Take every pitch","Bunt","Swing at everything","Get on base and keep the inning alive."],
+["B",1,"000","The pitcher has thrown three fastballs in a row. What’s a smart adjustment?","Look for a pitch you can drive and be ready for a change","Stay the same","Close your eyes","Quit","Pitchers mix speeds. Stay ready."],
+["B",0,"000","A pitch is inside and tight. What do you do?","Get out of the way and let it go","Swing","Lean in","Charge the mound","Safety comes first. Don’t lean into a tight pitch."],
+["B",2,"000","You strike out. What’s the best response?","Learn from it, reset, and cheer on teammates","Throw your bat","Quit","Blame the umpire","Mental toughness wins games. Every hitter strikes out."],
+["B",0,"000","You’re on deck. What should you do?","Watch the pitcher’s timing and get loose","Check your phone","Sit down","Talk","Use the on-deck time to see the pitcher’s speed and movement."],
+["B",0,"000","Before the game, what helps you hit best?","Warm up, stretch, and take soft toss or tee swings","Skip warm-ups","Eat only candy","Sleep","Preparation builds timing and confidence."]
+]]
+];
+var T=["Rookie","Little Leaguer","Travel Baller","JV Starter","Varsity","All-Conference","All-State","Hall of Famer"];
+var BASES=[[220,150],[150,82],[80,150]];
+var XY={P:[150,150],C:[150,238],"1B":[228,150],"2B":[168,92],"3B":[72,150],SS:[112,98],LF:[58,58],CF:[150,30],RF:[242,58],BR:[236,200],B:[174,246]};
+var P={xp:0,done:[],streak:0,last:""},L=null,app=document.getElementById("app");
+try{var s=JSON.parse(localStorage.getItem("diq"));if(s&&typeof s.xp==="number")P=s}catch(e){}
+function save(){try{localStorage.setItem("diq",JSON.stringify(P))}catch(e){}}
+function esc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function lvl(){return Math.floor(P.xp/100)}
+function unlocked(i){return i===0||P.done.indexOf(i-1)>-1}
+function home(){
+  var l=lvl(),pct=P.xp%100,nxt=0;
+  for(var i=0;i<U.length;i++){if(unlocked(i)&&P.done.indexOf(i)<0){nxt=i;break}nxt=i}
+  var h='<h1 class="logo">Diamond <i>IQ</i></h1><p class="tag">Learn what to do at your position, one play at a time.</p>';
+  h+='<div class="hero"><div class="row"><span class="lvl">Level '+(l+1)+': '+T[Math.min(l,T.length-1)]+'</span><span>🔥 '+P.streak+' day streak</span></div>';
+  h+='<div class="bar"><b style="width:'+pct+'%"></b></div><div>'+P.xp+' XP. '+(100-pct)+' to the next level.</div></div>';
+  h+='<button class="btn" id="go">'+(P.xp?"Continue: "+U[nxt][0]:"Start playing")+'</button>';
+  h+='<button class="btn alt" id="mu">Sound: '+(P.mute?"off":"on")+'</button><h2>Your season</h2><div class="path">';
+  U.forEach(function(u,i){var d=P.done.indexOf(i)>-1,lk=!unlocked(i);
+    h+='<button class="node'+(d?" done":"")+(lk?" locked":"")+'" data-u="'+i+'" '+(lk?'aria-disabled="true"':"")+'><span class="disc">'+(lk?"🔒":d?"⭐":u[1])+'</span><span><strong>'+u[0]+'</strong>'+(lk?"Finish the last unit to unlock":d?"Complete. Tap to replay":"5 situations")+'</span></button>'});
+  h+='</div>';
+  app.innerHTML=h;
+  document.getElementById("go").onclick=function(){begin(nxt)};
+  document.getElementById("mu").onclick=function(){P.mute=!P.mute;save();home()};
+  document.querySelectorAll(".node").forEach(function(n){n.onclick=function(){var i=+n.dataset.u;if(unlocked(i))begin(i)}});
+}
+function begin(u){L={u:u,deck:shuffle(U[u][2]).slice(0,5),i:0,hearts:3,right:0,xp:0,locked:false};ask()}
+function field(q){
+  var s='<svg class="field" viewBox="0 0 300 270" role="img" aria-label="Field showing runners and your position">';
+  s+='<polygon points="150,238 228,150 150,70 72,150" fill="#c58b5a" stroke="#fff" stroke-width="3"/><polygon points="150,226 210,150 150,90 90,150" fill="#2f6b3f"/>';
+  BASES.forEach(function(b,i){s+='<rect x="'+(b[0]-7)+'" y="'+(b[1]-7)+'" width="14" height="14" fill="#fff" transform="rotate(45 '+b[0]+' '+b[1]+')"/>';
+    if(q[2][i]==="1")s+='<circle cx="'+b[0]+'" cy="'+(b[1]-18)+'" r="9" fill="#f2b705" stroke="#14281c" stroke-width="2"/>'});
+  var p=XY[q[0]];
+  s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="16" fill="#b3202a" stroke="#fff" stroke-width="3"/><text x="'+p[0]+'" y="'+(p[1]+5)+'" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">'+q[0]+'</text></svg>';
+  return s;
+}
+function ask(){
+  var q=L.deck[L.i],lamps="";L.locked=false;
+  for(var k=0;k<2;k++)lamps+='<span class="lamp'+(k<q[1]?" on":"")+'"></span>';
+  var h='<div class="top"><button class="x" id="quit" aria-label="Quit lesson">✕</button><div class="bar"><b style="width:'+(L.i/5*100)+'%"></b></div><span class="hearts" aria-label="'+L.hearts+' hearts left">♥ '+L.hearts+'</span></div>';
+  h+='<div class="outs">Outs '+lamps+'</div>'+field(q)+'<p class="q">'+esc(q[3])+'</p><div class="opts" id="opts"></div><div id="fb" aria-live="polite"></div>';
+  app.innerHTML=h;
+  document.getElementById("quit").onclick=home;
+  var box=document.getElementById("opts");
+  shuffle([4,5,6,7]).forEach(function(i){var b=document.createElement("button");b.className="opt";b.textContent=q[i];b.onclick=function(){pick(i,b)};box.appendChild(b)});
+}
+function pick(i,btn){
+  if(L.locked)return;L.locked=true;var q=L.deck[L.i],ok=i===4;
+  document.querySelectorAll(".opt").forEach(function(b){b.disabled=true;if(b.textContent===q[4])b.classList.add("right")});
+  var cb=0;if(ok){L.right++;L.combo=(L.combo|0)+1;cb=L.combo>=3?5:0;L.xp+=10+cb;P.xp+=10+cb;beep(1)}else{L.hearts--;L.combo=0;btn.classList.add("wrong");beep(0)}
+  var last=L.i+1>=L.deck.length||L.hearts<1;
+  document.getElementById("fb").innerHTML='<div class="why"><strong>'+(ok?"Nice read! +"+(10+cb)+" XP"+(cb?" (3 in a row bonus!) ":". "):"Not quite. ")+'</strong>'+esc(q[8])+'</div><button class="btn" id="nx">'+(last?"Finish":"Continue")+'</button>';
+  document.querySelector(".hearts").textContent="♥ "+L.hearts;
+  var n=document.getElementById("nx");n.focus();n.onclick=function(){if(last)finish();else{L.i++;ask()}};
+}
+function finish(){
+  var win=L.hearts>0,before=lvl();
+  if(win){L.xp+=20;P.xp+=20;if(P.done.indexOf(L.u)<0)P.done.push(L.u);
+    var t=new Date().toDateString(),y=new Date(Date.now()-864e5).toDateString();
+    if(P.last!==t){P.streak=P.last===y?P.streak+1:1;P.last=t}}
+  save();
+  var up=lvl()>before,h='<div class="end">';
+  h+=win?'<div class="big">'+L.right+' / '+L.deck.length+'</div><p><strong>Lesson complete!</strong> Bonus +20 XP</p>':'<div class="big">Out!</div><p>You ran out of hearts. Review the explanations and try again.</p>';
+  h+='<div class="pop">+'+L.xp+' XP this lesson</div>';
+  if(up)h+='<p><strong>Level up! You’re now '+T[Math.min(lvl(),T.length-1)]+'.</strong></p>';
+  if(win)h+='<p>🔥 '+P.streak+' day streak</p>';
+  h+='<button class="btn" id="again">'+(win&&L.u+1<U.length&&P.done.indexOf(L.u+1)<0?"Next unit":"Play again")+'</button><button class="btn alt" id="hm">Back to home</button></div>';
+  app.innerHTML=h;
+  var nu=L.u;if(win)confetti();
+  document.getElementById("again").onclick=function(){begin(win&&nu+1<U.length&&P.done.indexOf(nu+1)<0?nu+1:nu)};
+  document.getElementById("hm").onclick=home;
+}
+var AC=null;
+function beep(g){try{if(P.mute)return;AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),v=AC.createGain();o.connect(v);v.connect(AC.destination);o.frequency.value=g?660:180;o.type=g?"triangle":"sawtooth";v.gain.value=.08;o.start();o.stop(AC.currentTime+(g?.12:.25));if(navigator.vibrate)navigator.vibrate(g?20:80)}catch(e){}}
+function confetti(){for(var i=0;i<24;i++){var e=document.createElement("span");e.className="conf";e.textContent=["⚾","⭐","🧢"][i%3];e.style.left=Math.random()*100+"%";e.style.animationDelay=Math.random()*.8+"s";document.body.appendChild(e);setTimeout(function(x){x.remove()},4000,e)}}
+home();
+</script>
+</body>
+</html>
